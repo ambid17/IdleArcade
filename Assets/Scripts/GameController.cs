@@ -47,7 +47,7 @@ public class GameController : Singleton<GameController>
         float nextXPosition = - objectsToSpawn.Count / 2;
         foreach (var organizeObject in objectsToSpawn)
         {
-            Vector3 position = new Vector3(-6 * nextXPosition++,-4, -13);
+            Vector3 position = new Vector3(-6 * nextXPosition++,-5, -13);
             SpawnTrashBin(organizeObject, position);
             
             for (int count = 0; count < spawnCount; count++)
