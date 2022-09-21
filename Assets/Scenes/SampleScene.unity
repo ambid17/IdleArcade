@@ -1203,7 +1203,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectsContainer: {fileID: 11400000, guid: da95cfb1acd72e5429c4ec3563d389c3, type: 2}
   objectParent: {fileID: 908447694}
-  objectTypeCount: 3
+  objectTypeCount: 4
   spawnCount: 10
   spawnBounds:
     m_Center: {x: 0, y: 5, z: 0}
