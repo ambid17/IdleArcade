@@ -5,13 +5,14 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class GameController : MonoBehaviour
+public class GameController : Singleton<GameController>
 {
     public OrganizeObjects objectsContainer;
     public Transform objectParent;
     public int objectTypeCount = 3;
     public int spawnCount;
     public Bounds spawnBounds;
+    public Bounds boxBounds;
     public GameObject trashPrefab;
 
     [SerializeField] private LayerMask objectLayerMask;
@@ -25,7 +26,6 @@ public class GameController : MonoBehaviour
         mainCamera = Camera.main;
         GetObjectsToSpawn();
         SpawnObjects();
-        SpawnTrashBins();
     }
 
     private void GetObjectsToSpawn()
@@ -44,8 +44,12 @@ public class GameController : MonoBehaviour
 
     private void SpawnObjects()
     {
+        float nextXPosition = - objectsToSpawn.Count / 2;
         foreach (var organizeObject in objectsToSpawn)
         {
+            Vector3 position = new Vector3(-6 * nextXPosition++,-4, -13);
+            SpawnTrashBin(organizeObject, position);
+            
             for (int count = 0; count < spawnCount; count++)
             {
                 GameObject objInstance = Instantiate(organizeObject.prefab, RandomPointInBounds(), Random.rotation);
@@ -65,20 +69,19 @@ public class GameController : MonoBehaviour
         );
     }
 
-    private void SpawnTrashBins()
+    private void SpawnTrashBin(OrganizeObject organizeObject, Vector3 position)
     {
-        for (int x = - objectTypeCount / 2; x <= objectTypeCount / 2; x++)
-        {
-            Vector3 position = new Vector3(x * 6,-5, -15);
-            GameObject trashInstance = Instantiate(trashPrefab, position, Quaternion.identity);
-        } 
+        GameObject trashInstance = Instantiate(trashPrefab, position, Quaternion.identity);
+        
+        TrashBinController trashBinController = trashInstance.GetComponent<TrashBinController>();
+        trashBinController.Setup(organizeObject);
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit, 100,
                 objectLayerMask))
             {
@@ -89,6 +92,11 @@ public class GameController : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0) && currentObject != null)
         {
+            if (!boxBounds.Contains(currentObject.transform.position))
+            {
+                currentObject.transform.position = RandomPointInBounds();
+            }
+            // if the object is outside of the bounds, snap back in
             currentObject.ToggleCollision(true);
             currentObject = null;
         }
@@ -107,7 +115,7 @@ public class GameController : MonoBehaviour
         // x-z plane
         var plane = new Plane(Vector3.zero, new Vector3(1, 0,0), new Vector3(1,0,1));
         
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         
         if (plane.Raycast(ray, out float distance)){
             return ray.GetPoint(distance);
@@ -119,6 +127,9 @@ public class GameController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Gizmos.DrawCube(spawnBounds.center, spawnBounds.size);
+        Gizmos.DrawWireCube(spawnBounds.center, spawnBounds.size);
+        
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(boxBounds.center, boxBounds.size);
     }
 }
